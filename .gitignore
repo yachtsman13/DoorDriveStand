@@ -1,0 +1,21 @@
+# Генерируемые модели, снимки и зависимости рендера
+out/
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Локальные настройки и данные
+.env
+.env.*
+*.sqlite
+*.sqlite3
+*.db
+*.log
+
+# Служебные файлы ОС
+.DS_Store
+Thumbs.db
