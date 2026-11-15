@@ -1,0 +1,65 @@
+name: Сборка модели стенда
+
+on:
+  push:
+    paths:
+      - ".github/workflows/build-stand.yml"
+      - "src/**"
+      - "requirements.txt"
+      - "assets/source/STL/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-stand-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Получить репозиторий
+        uses: actions/checkout@v4
+
+      - name: Установить Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Установить зависимости
+        run: python3 -m pip install -r requirements.txt
+
+      - name: Проверить исходники
+        run: |
+          python3 -m py_compile src/model.py src/model2.py src/model3.py src/model4.py \
+            src/model7.py src/pulley_htd.py src/compose7.py \
+            src/tools/inspect.py src/tools/meas.py src/tools/view.py
+          node --check src/shot9.js
+
+      - name: Собрать основную модель v7
+        run: python3 src/model7.py 600 0 pa --check
+
+      - name: Собрать шкив HTD 5M 28T
+        run: python3 src/pulley_htd.py a
+
+      - name: Собрать составную сборку
+        run: python3 src/compose7.py out/m7_pa.glb out/m7_pa_composed.glb 600
+
+      - name: Проверить результаты сборки
+        run: |
+          test -s out/m7_pa.glb
+          test -s out/m7_pulley_a.glb
+          test -s out/m7_pa_composed.glb
+          git diff --check HEAD
+
+      - name: Сохранить GLB артефактом сборки
+        uses: actions/upload-artifact@v4
+        with:
+          name: stand-glb
+          path: out/*.glb
+          retention-days: 30
